@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import mimetypes
 from collections import Counter, defaultdict
 from html import escape
 from pathlib import Path
@@ -74,19 +76,28 @@ PREFERRED_EXAMPLES = {
 }
 
 
-def generate_manager_brief(dataset: ScrapeDataset, html_path: Path, markdown_path: Path) -> None:
+def generate_manager_brief(
+    dataset: ScrapeDataset,
+    html_path: Path,
+    markdown_path: Path,
+    embed_assets: bool = False,
+) -> None:
     html_path.parent.mkdir(parents=True, exist_ok=True)
     markdown_path.parent.mkdir(parents=True, exist_ok=True)
 
     posts = sorted(dataset.posts, key=lambda post: post.timestamp or post.scraped_at, reverse=True)
-    context = build_brief_context(posts, html_path)
+    context = build_brief_context(posts, html_path, embed_assets=embed_assets)
     markdown = render_markdown(context)
     html = render_html(markdown, context)
     markdown_path.write_text(markdown, encoding="utf-8")
     html_path.write_text(html, encoding="utf-8")
 
 
-def build_brief_context(posts: list[InstagramPost], html_path: Path) -> dict[str, object]:
+def build_brief_context(
+    posts: list[InstagramPost],
+    html_path: Path,
+    embed_assets: bool = False,
+) -> dict[str, object]:
     categories = Counter(post.analysis.category if post.analysis else "Other" for post in posts)
     accounts: dict[str, list[InstagramPost]] = defaultdict(list)
     for post in posts:
@@ -123,11 +134,15 @@ def build_brief_context(posts: list[InstagramPost], html_path: Path) -> dict[str
         "equipped_share": round((len(actionable) / max(len(posts), 1)) * 100),
         "categories": categories,
         "account_rows": account_rows,
-        "examples": pick_examples(posts, html_path),
+        "examples": pick_examples(posts, html_path, embed_assets=embed_assets),
     }
 
 
-def pick_examples(posts: list[InstagramPost], html_path: Path) -> list[dict[str, str]]:
+def pick_examples(
+    posts: list[InstagramPost],
+    html_path: Path,
+    embed_assets: bool = False,
+) -> list[dict[str, str]]:
     examples: list[dict[str, str]] = []
     by_id = {post.id: post for post in posts}
     ordered_posts = [by_id[post_id] for post_id in PREFERRED_EXAMPLES if post_id in by_id]
@@ -145,7 +160,7 @@ def pick_examples(posts: list[InstagramPost], html_path: Path) -> list[dict[str,
                 "original": excerpt(post.caption),
                 "translation": translation.get("translation", ""),
                 "takeaway": translation.get("takeaway", post.analysis.strategy),
-                "image": relative_asset(post.media_path, html_path),
+                "image": image_src(post.media_path, html_path, embed_assets),
                 "url": post.post_url,
             }
         )
@@ -167,7 +182,7 @@ def pick_examples(posts: list[InstagramPost], html_path: Path) -> list[dict[str,
                 "original": excerpt(post.caption),
                 "translation": post.analysis.strategy,
                 "takeaway": post.analysis.follower_action or post.analysis.strategy,
-                "image": relative_asset(post.media_path, html_path),
+                "image": image_src(post.media_path, html_path, embed_assets),
                 "url": post.post_url,
             }
         )
@@ -182,6 +197,20 @@ def excerpt(text: str, limit: int = 360) -> str:
     if len(cleaned) <= limit:
         return cleaned
     return cleaned[: limit - 1].rstrip() + "…"
+
+
+def image_src(asset_path: str | None, html_path: Path, embed_assets: bool) -> str:
+    if not asset_path:
+        return ""
+    if not embed_assets:
+        return relative_asset(asset_path, html_path)
+
+    path = Path(asset_path)
+    if not path.exists():
+        return ""
+    mime = mimetypes.guess_type(path.name)[0] or "image/jpeg"
+    encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:{mime};base64,{encoded}"
 
 
 def render_markdown(context: dict[str, object]) -> str:
@@ -264,22 +293,31 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>תקציר מנהלים - ADL Instagram</title>
     <style>
+      * {{ box-sizing: border-box; }}
       body {{
         margin: 0;
-        background: #f8fafc;
+        background: #eef3f8;
         color: #0f1f3d;
         font-family: Arial, "Noto Sans Hebrew", sans-serif;
         line-height: 1.65;
       }}
       main {{
-        max-width: 920px;
-        margin: 0 auto;
-        padding: 40px 24px 56px;
+        max-width: 1040px;
+        margin: 28px auto;
+        padding: 34px 38px 48px;
         background: #fff;
-        min-height: 100vh;
+        border: 1px solid #dbe3ef;
+        border-radius: 12px;
+        box-shadow: 0 18px 45px rgba(15, 31, 61, 0.08);
       }}
-      h1 {{ font-size: 30px; line-height: 1.25; margin: 0 0 24px; }}
-      h2 {{ font-size: 19px; margin: 28px 0 8px; border-top: 1px solid #dbe3ef; padding-top: 18px; }}
+      h1 {{
+        font-size: 32px;
+        line-height: 1.25;
+        margin: 10px 0 26px;
+        padding-bottom: 18px;
+        border-bottom: 3px solid #0b5cad;
+      }}
+      h2 {{ font-size: 20px; margin: 30px 0 10px; border-top: 1px solid #dbe3ef; padding-top: 18px; }}
       p, li {{ font-size: 16px; }}
       ul, ol {{ padding-inline-start: 26px; }}
       a {{ color: #0b5cad; }}
@@ -287,19 +325,20 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 12px;
-        margin: 24px 0;
+        margin: 0 0 24px;
       }}
       .stat {{
         border: 1px solid #dbe3ef;
         border-radius: 8px;
-        padding: 14px;
-        background: #f8fafc;
+        padding: 18px;
+        background: linear-gradient(180deg, #ffffff, #f8fbff);
       }}
       .stat b {{ display: block; font-size: 28px; color: #0b5cad; }}
+      ol li::marker {{ color: #0b5cad; font-weight: 700; }}
       .examples {{
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
+        gap: 18px;
         margin-top: 18px;
       }}
       .card {{
@@ -307,6 +346,7 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
         border-radius: 8px;
         overflow: hidden;
         background: #fff;
+        box-shadow: 0 10px 24px rgba(15, 31, 61, 0.06);
       }}
       .card img {{
         width: 100%;
@@ -342,15 +382,20 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
         margin-top: 10px;
         padding-top: 10px;
         font-weight: 700;
+        color: #0f1f3d;
       }}
       .example-section {{
         border-top: 1px solid #dbe3ef;
         margin-top: 28px;
         padding-top: 18px;
       }}
+      .example-section > p {{
+        color: #52647c;
+        margin-top: 0;
+      }}
       @media print {{
         body {{ background: #fff; }}
-        main {{ padding: 0; }}
+        main {{ margin: 0; border: 0; box-shadow: none; }}
       }}
       @media (max-width: 760px) {{
         .stats, .examples {{ grid-template-columns: 1fr; }}

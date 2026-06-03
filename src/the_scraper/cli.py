@@ -117,9 +117,13 @@ def brief(
     markdown: Annotated[Path, typer.Option(help="Simple Hebrew Markdown brief output.")] = Path(
         "output/manager_brief_he.md"
     ),
+    embed_assets: Annotated[
+        bool,
+        typer.Option(help="Embed example images as data URLs for a self-contained HTML file."),
+    ] = False,
 ) -> None:
     dataset = load_dataset(input)
-    generate_manager_brief(dataset, html, markdown)
+    generate_manager_brief(dataset, html, markdown, embed_assets=embed_assets)
     console.print(f"[green]Generated manager brief at {html} and {markdown}[/green]")
 
 
