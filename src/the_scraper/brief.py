@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from html import escape
 from pathlib import Path
 
 from .models import InstagramPost, ScrapeDataset
-from .report import category_label
+from .report import category_label, relative_asset
 
 
 ACTION_CATEGORIES = {
@@ -27,20 +28,65 @@ METHOD_LABELS = {
     "Other": "מסרים כלליים או ארגוניים",
 }
 
+PREFERRED_EXAMPLES = {
+    "adlmichigan:DX_7ui1HApZ": {
+        "translation": (
+            "ADL מציגים נתונים על היקף האירועים האנטישמיים בארה״ב ובמישיגן, "
+            "ומסבירים מדוע הקהילה היהודית מרגישה פחות בטוחה. זה מחזק מודעות ומספק הקשר עובדתי."
+        ),
+        "takeaway": "הם מציידים את העוקבים בנתונים כדי לזהות את חומרת הבעיה.",
+    },
+    "adlmichigan:DY18fEHEXZU": {
+        "translation": (
+            "הפוסט מזמין את העוקבים להגיע לערב קהילתי על יהדות, גאווה יהודית ומוזיקה, "
+            "עם רישום מראש וללא כניסה חופשית."
+        ),
+        "takeaway": "הפעולה המבוקשת היא להגיע פיזית ולהשתתף בחיזוק קהילתי.",
+    },
+    "adlmichigan:DYlPSbcpi96": {
+        "translation": (
+            "ADL מגיבים להודעת בית ספר בעקבות אירוע ספציפי, וממקמים אותו כחלק מהצורך "
+            "להתייחס ברצינות לאנטישמיות במרחבים חינוכיים."
+        ),
+        "takeaway": "הם נותנים לקהילה מסגרת תגובה לאירוע אנטישמי קונקרטי.",
+    },
+    "adlcalifornia:DYF-UFuEqVp": {
+        "translation": (
+            "מנהלי ADL קליפורניה שולחים מכתב רשמי לגורם מדינתי בעקבות הפצת רטוריקה אנטישמית "
+            "במדריך מידע רשמי לבוחרים."
+        ),
+        "takeaway": "הם מראים שימוש בכלים מוסדיים ורשמיים כדי להתמודד עם אנטישמיות.",
+    },
+    "adl_newengland:DYNbgakFoe3": {
+        "translation": (
+            "הפוסט עומד לצד עסק יהודי שספג ונדליזם אנטישמי חוזר, ומבקש מהעוקבים לבקר או להזמין, "
+            "לשתף את הפוסט, ולדווח ל-ADL אם הם רואים אירוע שנאה."
+        ),
+        "takeaway": "זו הדוגמה הכי ישירה: תמיכה בעסק, שיתוף, ודיווח על שנאה.",
+    },
+    "adl_midwest:DXzv6-xkbXq": {
+        "translation": (
+            "הפוסט מתאר התנגדות משותפת להצעת חוק באילינוי, ומדגיש שכאשר הקהילה מופיעה יחד "
+            "הקול הציבורי שלה חזק יותר."
+        ),
+        "takeaway": "כאן הפעולה היא סנגור ציבורי ועבודה עם שותפים מול מדיניות.",
+    },
+}
+
 
 def generate_manager_brief(dataset: ScrapeDataset, html_path: Path, markdown_path: Path) -> None:
     html_path.parent.mkdir(parents=True, exist_ok=True)
     markdown_path.parent.mkdir(parents=True, exist_ok=True)
 
     posts = sorted(dataset.posts, key=lambda post: post.timestamp or post.scraped_at, reverse=True)
-    context = build_brief_context(posts)
+    context = build_brief_context(posts, html_path)
     markdown = render_markdown(context)
     html = render_html(markdown, context)
     markdown_path.write_text(markdown, encoding="utf-8")
     html_path.write_text(html, encoding="utf-8")
 
 
-def build_brief_context(posts: list[InstagramPost]) -> dict[str, object]:
+def build_brief_context(posts: list[InstagramPost], html_path: Path) -> dict[str, object]:
     categories = Counter(post.analysis.category if post.analysis else "Other" for post in posts)
     accounts: dict[str, list[InstagramPost]] = defaultdict(list)
     for post in posts:
@@ -77,13 +123,39 @@ def build_brief_context(posts: list[InstagramPost]) -> dict[str, object]:
         "equipped_share": round((len(actionable) / max(len(posts), 1)) * 100),
         "categories": categories,
         "account_rows": account_rows,
-        "examples": pick_examples(actionable),
+        "examples": pick_examples(posts, html_path),
     }
 
 
-def pick_examples(posts: list[InstagramPost]) -> list[dict[str, str]]:
+def pick_examples(posts: list[InstagramPost], html_path: Path) -> list[dict[str, str]]:
     examples: list[dict[str, str]] = []
+    by_id = {post.id: post for post in posts}
+    ordered_posts = [by_id[post_id] for post_id in PREFERRED_EXAMPLES if post_id in by_id]
+
     used_categories: set[str] = set()
+    for post in ordered_posts:
+        if not post.analysis:
+            continue
+        translation = PREFERRED_EXAMPLES.get(post.id, {})
+        examples.append(
+            {
+                "account": post.account,
+                "category": METHOD_LABELS.get(post.analysis.category, category_label(post.analysis.category)),
+                "date": post.timestamp.strftime("%Y-%m-%d") if post.timestamp else "",
+                "original": excerpt(post.caption),
+                "translation": translation.get("translation", ""),
+                "takeaway": translation.get("takeaway", post.analysis.strategy),
+                "image": relative_asset(post.media_path, html_path),
+                "url": post.post_url,
+            }
+        )
+        used_categories.add(post.analysis.category)
+        if len(examples) >= 6:
+            break
+
+    if len(examples) >= 6:
+        return examples
+
     for post in posts:
         if not post.analysis or post.analysis.category in used_categories:
             continue
@@ -91,14 +163,25 @@ def pick_examples(posts: list[InstagramPost]) -> list[dict[str, str]]:
             {
                 "account": post.account,
                 "category": METHOD_LABELS.get(post.analysis.category, category_label(post.analysis.category)),
-                "summary": post.analysis.strategy,
+                "date": post.timestamp.strftime("%Y-%m-%d") if post.timestamp else "",
+                "original": excerpt(post.caption),
+                "translation": post.analysis.strategy,
+                "takeaway": post.analysis.follower_action or post.analysis.strategy,
+                "image": relative_asset(post.media_path, html_path),
                 "url": post.post_url,
             }
         )
         used_categories.add(post.analysis.category)
-        if len(examples) >= 5:
+        if len(examples) >= 6:
             break
     return examples
+
+
+def excerpt(text: str, limit: int = 360) -> str:
+    cleaned = " ".join(text.split())
+    if len(cleaned) <= limit:
+        return cleaned
+    return cleaned[: limit - 1].rstrip() + "…"
 
 
 def render_markdown(context: dict[str, object]) -> str:
@@ -115,7 +198,13 @@ def render_markdown(context: dict[str, object]) -> str:
         for row in account_rows
     ]
     example_lines = [
-        f"- {item['account']}: {item['category']} - {item['summary']} ({item['url']})"
+        (
+            f"- {item['account']} | {item['category']}\n"
+            f"  מקור: {item['original']}\n"
+            f"  תרגום/משמעות: {item['translation']}\n"
+            f"  למה זה חשוב: {item['takeaway']}\n"
+            f"  קישור: {item['url']}"
+        )
         for item in examples
     ]
 
@@ -163,7 +252,11 @@ def render_markdown(context: dict[str, object]) -> str:
 
 
 def render_html(markdown: str, context: dict[str, object]) -> str:
-    body = markdown_to_html(markdown)
+    markdown_without_text_examples = remove_text_examples(markdown)
+    before_breakdown, breakdown = split_before_breakdown(markdown_without_text_examples)
+    body_before = markdown_to_html(before_breakdown)
+    body_after = markdown_to_html(breakdown)
+    cards = render_example_cards(context["examples"])  # type: ignore[arg-type]
     return f"""<!doctype html>
 <html lang="he" dir="rtl">
   <head>
@@ -203,9 +296,64 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
         background: #f8fafc;
       }}
       .stat b {{ display: block; font-size: 28px; color: #0b5cad; }}
+      .examples {{
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+      }}
+      .card {{
+        border: 1px solid #dbe3ef;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+      }}
+      .card img {{
+        width: 100%;
+        height: 230px;
+        object-fit: cover;
+        background: #eef2f7;
+      }}
+      .card-body {{ padding: 14px; }}
+      .card h3 {{ margin: 0 0 4px; font-size: 17px; }}
+      .meta {{ color: #52647c; font-size: 13px; margin-bottom: 10px; }}
+      .chip {{
+        display: inline-block;
+        margin: 0 0 10px 6px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: #e8f6f7;
+        color: #087985;
+        font-size: 13px;
+        font-weight: 700;
+      }}
+      .quote {{
+        direction: ltr;
+        text-align: left;
+        color: #24364f;
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 14px;
+      }}
+      .translation {{ font-size: 15px; }}
+      .takeaway {{
+        border-top: 1px solid #edf1f7;
+        margin-top: 10px;
+        padding-top: 10px;
+        font-weight: 700;
+      }}
+      .example-section {{
+        border-top: 1px solid #dbe3ef;
+        margin-top: 28px;
+        padding-top: 18px;
+      }}
       @media print {{
         body {{ background: #fff; }}
         main {{ padding: 0; }}
+      }}
+      @media (max-width: 760px) {{
+        .stats, .examples {{ grid-template-columns: 1fr; }}
       }}
     </style>
   </head>
@@ -216,11 +364,50 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
         <div class="stat"><b>{context['account_count']}</b><span>חשבונות</span></div>
         <div class="stat"><b>{context['equipped_share']}%</b><span>עם הכוונה לפעולה</span></div>
       </div>
-      {body}
+      {body_before}
+      <section class="example-section">
+        <h2>דוגמאות עם תרגום קצר</h2>
+        <p>אלה דוגמאות מייצגות שמראות בפועל איך החשבונות מנסים להפעיל את העוקבים.</p>
+        <div class="examples">
+          {cards}
+        </div>
+      </section>
+      {body_after}
     </main>
   </body>
 </html>
 """
+
+
+def render_example_cards(examples: list[dict[str, str]]) -> str:
+    cards: list[str] = []
+    for item in examples:
+        image = item.get("image") or ""
+        account = item["account"]
+        category = item["category"]
+        date = item["date"]
+        original = item["original"]
+        translation = item["translation"]
+        takeaway = item["takeaway"]
+        url = item["url"]
+        image_html = f'<img src="{escape(image)}" alt="דוגמה מפוסט של {escape(account)}" />' if image else ""
+        cards.append(
+            f"""
+          <article class="card">
+            {image_html}
+            <div class="card-body">
+              <h3>{escape(account)}</h3>
+              <div class="meta">{escape(date)} · {escape(category)}</div>
+              <span class="chip">{escape(category)}</span>
+              <p class="quote">{escape(original)}</p>
+              <p class="translation"><b>תרגום/משמעות:</b> {escape(translation)}</p>
+              <p class="takeaway">{escape(takeaway)}</p>
+              <a href="{escape(url)}" target="_blank" rel="noreferrer">פתיחת הפוסט</a>
+            </div>
+          </article>
+            """
+        )
+    return "\n".join(cards)
 
 
 def markdown_to_html(markdown: str) -> str:
@@ -235,12 +422,12 @@ def markdown_to_html(markdown: str) -> str:
                 list_type = ""
             continue
         if line.startswith("# "):
-            html_lines.append(f"<h1>{line[2:]}</h1>")
+            html_lines.append(f"<h1>{escape(line[2:])}</h1>")
         elif line.startswith("## "):
             if in_list:
                 html_lines.append(f"</{list_type}>")
                 in_list = False
-            html_lines.append(f"<h2>{line[3:]}</h2>")
+            html_lines.append(f"<h2>{escape(line[3:])}</h2>")
         elif line.startswith("- "):
             if not in_list or list_type != "ul":
                 if in_list:
@@ -248,7 +435,7 @@ def markdown_to_html(markdown: str) -> str:
                 html_lines.append("<ul>")
                 in_list = True
                 list_type = "ul"
-            html_lines.append(f"<li>{link_urls(line[2:])}</li>")
+            html_lines.append(f"<li>{link_urls(escape(line[2:]))}</li>")
         elif len(line) > 3 and line[0].isdigit() and line[1:3] == ". ":
             if not in_list or list_type != "ol":
                 if in_list:
@@ -256,15 +443,33 @@ def markdown_to_html(markdown: str) -> str:
                 html_lines.append("<ol>")
                 in_list = True
                 list_type = "ol"
-            html_lines.append(f"<li>{link_urls(line[3:])}</li>")
+            html_lines.append(f"<li>{link_urls(escape(line[3:]))}</li>")
         else:
             if in_list:
                 html_lines.append(f"</{list_type}>")
                 in_list = False
-            html_lines.append(f"<p>{link_urls(line)}</p>")
+            html_lines.append(f"<p>{link_urls(escape(line))}</p>")
     if in_list:
         html_lines.append(f"</{list_type}>")
     return "\n".join(html_lines)
+
+
+def remove_text_examples(markdown: str) -> str:
+    marker = "\n## דוגמאות מייצגות\n"
+    next_marker = "\n## הערה למנהל\n"
+    if marker not in markdown or next_marker not in markdown:
+        return markdown
+    before, rest = markdown.split(marker, 1)
+    _, after = rest.split(next_marker, 1)
+    return before + next_marker + after
+
+
+def split_before_breakdown(markdown: str) -> tuple[str, str]:
+    marker = "\n## התפלגות מסרים\n"
+    if marker not in markdown:
+        return markdown, ""
+    before, after = markdown.split(marker, 1)
+    return before, marker.lstrip("\n") + after
 
 
 def link_urls(text: str) -> str:
