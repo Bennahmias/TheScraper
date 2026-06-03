@@ -9,7 +9,9 @@ import typer
 from rich.console import Console
 
 from .analysis import analyze_dataset
+from .brief import generate_manager_brief
 from .config import default_since_date, load_account_urls
+from .feed_backend import InstagramFeedBackend
 from .instaloader_backend import scrape_with_instaloader
 from .report import generate_report
 from .scraper import InstagramScraper
@@ -33,8 +35,8 @@ def scrape(
     headless: Annotated[bool, typer.Option(help="Run browser in headless mode.")] = True,
     backend: Annotated[
         str,
-        typer.Option(help="Scraping backend: playwright or instaloader."),
-    ] = "playwright",
+        typer.Option(help="Scraping backend: feed, playwright, or instaloader."),
+    ] = "feed",
 ) -> None:
     since_date = parse_since(since)
     urls = load_account_urls(accounts)
@@ -44,7 +46,14 @@ def scrape(
     console.print(
         f"[bold]Scraping {len(urls)} accounts from {since_date} onward via {backend}...[/bold]"
     )
-    if backend == "playwright":
+    if backend == "feed":
+        scraper = InstagramFeedBackend(
+            output_dir=output.parent,
+            max_posts_per_account=max_posts_per_account,
+            headless=headless,
+        )
+        dataset = asyncio.run(scraper.scrape_accounts(urls, since_date))
+    elif backend == "playwright":
         scraper = InstagramScraper(
             output_dir=output.parent,
             max_posts_per_account=max_posts_per_account,
@@ -59,7 +68,7 @@ def scrape(
             max_posts_per_account=max_posts_per_account,
         )
     else:
-        raise typer.BadParameter("backend must be 'playwright' or 'instaloader'")
+        raise typer.BadParameter("backend must be 'feed', 'playwright', or 'instaloader'")
 
     save_dataset(dataset, output)
     console.print(f"[green]Saved {len(dataset.posts)} posts to {output}[/green]")
@@ -97,6 +106,23 @@ def report(
     console.print(f"[green]Generated dashboard at {output}[/green]")
 
 
+@app.command()
+def brief(
+    input: Annotated[Path, typer.Option(help="Analyzed JSON input.")] = Path(
+        "output/analyzed_posts.json"
+    ),
+    html: Annotated[Path, typer.Option(help="Simple Hebrew HTML brief output.")] = Path(
+        "output/manager_brief_he.html"
+    ),
+    markdown: Annotated[Path, typer.Option(help="Simple Hebrew Markdown brief output.")] = Path(
+        "output/manager_brief_he.md"
+    ),
+) -> None:
+    dataset = load_dataset(input)
+    generate_manager_brief(dataset, html, markdown)
+    console.print(f"[green]Generated manager brief at {html} and {markdown}[/green]")
+
+
 @app.command("run-all")
 def run_all(
     accounts: Annotated[Path, typer.Option(help="Text file containing Instagram profile URLs.")] = Path(
@@ -110,7 +136,7 @@ def run_all(
     provider: Annotated[str, typer.Option(help="auto, openai, or rules.")] = "auto",
     model: Annotated[str | None, typer.Option(help="OpenAI model name.")] = None,
     headless: Annotated[bool, typer.Option(help="Run browser in headless mode.")] = True,
-    backend: Annotated[str, typer.Option(help="Scraping backend: playwright or instaloader.")] = "playwright",
+    backend: Annotated[str, typer.Option(help="Scraping backend: feed, playwright, or instaloader.")] = "feed",
 ) -> None:
     posts_path = Path("output/posts.json")
     analyzed_path = Path("output/analyzed_posts.json")
