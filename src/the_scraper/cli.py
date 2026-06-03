@@ -120,7 +120,7 @@ def brief(
     embed_assets: Annotated[
         bool,
         typer.Option(help="Embed example images as data URLs for a self-contained HTML file."),
-    ] = False,
+    ] = True,
 ) -> None:
     dataset = load_dataset(input)
     generate_manager_brief(dataset, html, markdown, embed_assets=embed_assets)
