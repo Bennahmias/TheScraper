@@ -59,6 +59,8 @@ Generate the interactive dashboard:
 the-scraper report --input output/analyzed_posts.json --output output/report.html
 ```
 
+The dashboard is generated in Hebrew with RTL layout, suitable for sharing with a manager.
+
 Run the full pipeline:
 
 ```powershell
@@ -88,4 +90,3 @@ Per post:
 - screenshot path
 - media URL/path when available
 - analysis category, strategy, tone, urgency, evidence, and actionability score
-

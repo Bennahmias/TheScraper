@@ -33,7 +33,7 @@ def load_account_urls(path: Path) -> list[str]:
     urls: list[str] = []
     seen: set[str] = set()
 
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue

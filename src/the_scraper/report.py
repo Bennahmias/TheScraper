@@ -8,6 +8,30 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from .models import InstagramPost, ScrapeDataset
 
+CATEGORY_LABELS_HE = {
+    "Reporting": "דיווח",
+    "Education": "חינוך והדרכה",
+    "Advocacy": "סנגור והשפעה ציבורית",
+    "Community Action": "פעולה קהילתית",
+    "Toolkit or Resource": "ערכת כלים או משאב",
+    "Incident Response": "תגובה לאירוע",
+    "Commemoration": "הנצחה וזיכרון",
+    "Awareness": "מודעות",
+    "Other": "אחר",
+    "Unanalyzed": "לא נותח",
+}
+
+TONE_LABELS_HE = {
+    "Empowering": "מעצים",
+    "Urgent": "דחוף",
+    "Informative": "אינפורמטיבי",
+    "Solidarity": "סולידריות",
+    "Protective": "מגן",
+    "Commemorative": "הנצחתי",
+    "Other": "אחר",
+    "Unanalyzed": "לא נותח",
+}
+
 
 def generate_report(dataset: ScrapeDataset, output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -22,8 +46,10 @@ def generate_report(dataset: ScrapeDataset, output_path: Path) -> None:
 
 def build_view_model(dataset: ScrapeDataset, output_path: Path) -> dict[str, object]:
     posts = sorted(dataset.posts, key=lambda post: post.timestamp or post.scraped_at, reverse=True)
-    categories = Counter((post.analysis.category if post.analysis else "Unanalyzed") for post in posts)
-    tones = Counter((post.analysis.tone if post.analysis else "Unanalyzed") for post in posts)
+    categories = Counter(
+        category_label(post.analysis.category if post.analysis else "Unanalyzed") for post in posts
+    )
+    tones = Counter(tone_label(post.analysis.tone if post.analysis else "Unanalyzed") for post in posts)
     accounts = Counter(post.account for post in posts)
     equipped = sum(1 for post in posts if post.analysis and post.analysis.equips_followers)
     engagement_values = [(post.likes or 0) + (post.comments or 0) for post in posts]
@@ -44,7 +70,8 @@ def build_view_model(dataset: ScrapeDataset, output_path: Path) -> dict[str, obj
             2,
         ),
         "total_engagement": sum(engagement_values),
-        "warnings": dataset.warnings,
+        "warnings": [translate_warning(warning) for warning in dataset.warnings],
+        "insight_lines": build_insight_lines(posts, categories, equipped),
         "posts_json": json.dumps(serializable_posts, ensure_ascii=False),
         "categories_json": json.dumps(dict(categories), ensure_ascii=False),
         "tones_json": json.dumps(dict(tones), ensure_ascii=False),
@@ -72,8 +99,8 @@ def build_account_rows(posts: list[InstagramPost]) -> list[dict[str, object]]:
                 "equipped": sum(
                     1 for post in account_posts if post.analysis and post.analysis.equips_followers
                 ),
-                "top_category": category_counts.most_common(1)[0][0],
-                "top_tone": tone_counts.most_common(1)[0][0],
+                "top_category": category_label(category_counts.most_common(1)[0][0]),
+                "top_tone": tone_label(tone_counts.most_common(1)[0][0]),
                 "avg_actionability": round(
                     sum(
                         post.analysis.actionability_score
@@ -118,9 +145,11 @@ def serialize_post(post: InstagramPost, output_path: Path) -> dict[str, object]:
         "engagement": (post.likes or 0) + (post.comments or 0),
         "screenshot": relative_asset(post.screenshot_path, output_path),
         "media": relative_asset(post.media_path, output_path),
-        "category": analysis.category if analysis else "Unanalyzed",
+        "category": category_label(analysis.category if analysis else "Unanalyzed"),
+        "categoryRaw": analysis.category if analysis else "Unanalyzed",
         "strategy": analysis.strategy if analysis else "",
-        "tone": analysis.tone if analysis else "Unanalyzed",
+        "tone": tone_label(analysis.tone if analysis else "Unanalyzed"),
+        "toneRaw": analysis.tone if analysis else "Unanalyzed",
         "targetAudience": analysis.target_audience if analysis else "",
         "followerAction": analysis.follower_action if analysis else "",
         "equipsFollowers": analysis.equips_followers if analysis else False,
@@ -138,3 +167,55 @@ def relative_asset(asset_path: str | None, output_path: Path) -> str:
         return path.resolve().relative_to(output_path.parent.resolve()).as_posix()
     except ValueError:
         return path.as_posix()
+
+
+def build_insight_lines(
+    posts: list[InstagramPost],
+    categories: Counter[str],
+    equipped_count: int,
+) -> list[str]:
+    if not posts:
+        return ["לא נמצאו פוסטים זמינים לניתוח בטווח התאריכים שנבחר."]
+
+    top_categories = ", ".join(
+        f"{category} ({count})" for category, count in categories.most_common(3)
+    )
+    total = len(posts)
+    equipped_share = round((equipped_count / total) * 100)
+    direct_examples = [
+        post
+        for post in posts
+        if post.analysis
+        and post.analysis.category in {"Reporting", "Education", "Advocacy", "Community Action", "Toolkit or Resource"}
+    ]
+
+    lines = [
+        f"בפוסטים הציבוריים שנמצאו, הדגש המרכזי הוא: {top_categories}.",
+        f"{equipped_count} מתוך {total} פוסטים ({equipped_share}%) כוללים הכוונה או כלי פעולה לעוקבים.",
+    ]
+    if direct_examples:
+        lines.append(
+            "החשבונות משתמשים בעיקר בהזמנות ללמידה, אירועים קהילתיים, דיווח על אירועים "
+            "ושיתוף משאבים כדי לצייד את העוקבים להתמודדות עם אנטישמיות."
+        )
+    else:
+        lines.append(
+            "רוב הפוסטים שנמצאו מתמקדים במודעות ובהקשר ציבורי, עם מעט הנחיות פעולה ישירות."
+        )
+    return lines
+
+
+def translate_warning(warning: str) -> str:
+    prefix = "No public post URLs found for "
+    if warning.startswith(prefix):
+        account = warning.removeprefix(prefix).rstrip(".")
+        return f"לא נמצאו קישורי פוסטים ציבוריים עבור {account} בגלישה ללא התחברות."
+    return warning
+
+
+def category_label(value: str) -> str:
+    return CATEGORY_LABELS_HE.get(value, value)
+
+
+def tone_label(value: str) -> str:
+    return TONE_LABELS_HE.get(value, value)

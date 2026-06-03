@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="he" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ADL Regional Instagram Action Analysis</title>
+    <title>ניתוח פעילות אינסטגרם אזורית של ADL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -49,9 +49,9 @@
           <div class="text-3xl font-black tracking-normal text-[#0b5cad]">ADL</div>
           <div>
             <h1 class="text-xl font-semibold leading-tight text-[#08214a] md:text-2xl">
-              ADL Regional Instagram Action Analysis
+              ניתוח פעילות אינסטגרם אזורית של ADL
             </h1>
-            <p class="text-sm text-slate-500">Posts from {{ since }}. Generated {{ generated_at }}.</p>
+            <p class="text-sm text-slate-500">פוסטים מתאריך {{ since }} והלאה. נוצר בתאריך {{ generated_at }}.</p>
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -59,13 +59,13 @@
             id="exportJson"
             class="focus-ring rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-[#08214a] hover:border-[#078d99]"
           >
-            Export JSON
+            ייצוא JSON
           </button>
           <button
             id="printReport"
             class="focus-ring rounded-md bg-[#08214a] px-3 py-2 text-sm font-medium text-white hover:bg-[#0b5cad]"
           >
-            Print / PDF
+            הדפסה / PDF
           </button>
         </div>
       </div>
@@ -74,58 +74,58 @@
     <main class="grid min-h-screen grid-cols-1 lg:grid-cols-[280px_1fr]">
       <aside class="border-b border-slate-200 bg-white p-5 lg:border-b-0 lg:border-r">
         <div class="mb-5 flex items-center justify-between">
-          <h2 class="text-xs font-bold uppercase tracking-normal text-[#08214a]">Filters</h2>
-          <button id="clearFilters" class="text-xs font-medium text-[#0b5cad]">Clear</button>
+          <h2 class="text-xs font-bold uppercase tracking-normal text-[#08214a]">סינון</h2>
+          <button id="clearFilters" class="text-xs font-medium text-[#0b5cad]">ניקוי</button>
         </div>
 
-        <label class="mb-2 block text-sm font-semibold text-[#08214a]" for="searchInput">Search</label>
+        <label class="mb-2 block text-sm font-semibold text-[#08214a]" for="searchInput">חיפוש</label>
         <input
           id="searchInput"
           class="focus-ring mb-5 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Caption, strategy, account"
+          placeholder="כיתוב, אסטרטגיה, חשבון"
         />
 
-        <label class="mb-2 block text-sm font-semibold text-[#08214a]" for="accountFilter">Account</label>
+        <label class="mb-2 block text-sm font-semibold text-[#08214a]" for="accountFilter">חשבון</label>
         <select id="accountFilter" class="focus-ring mb-5 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-          <option value="">All accounts</option>
+          <option value="">כל החשבונות</option>
         </select>
 
-        <label class="mb-2 block text-sm font-semibold text-[#08214a]" for="categoryFilter">Category</label>
+        <label class="mb-2 block text-sm font-semibold text-[#08214a]" for="categoryFilter">קטגוריה</label>
         <select id="categoryFilter" class="focus-ring mb-5 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-          <option value="">All categories</option>
+          <option value="">כל הקטגוריות</option>
         </select>
 
-        <label class="mb-2 block text-sm font-semibold text-[#08214a]" for="toneFilter">Tone</label>
+        <label class="mb-2 block text-sm font-semibold text-[#08214a]" for="toneFilter">טון</label>
         <select id="toneFilter" class="focus-ring mb-5 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-          <option value="">All tones</option>
+          <option value="">כל הטונים</option>
         </select>
 
         <label class="flex items-center gap-2 text-sm text-slate-700">
           <input id="equippedFilter" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-[#078d99]" />
-          Equipped followers only
+          רק פוסטים שמציידים את העוקבים לפעולה
         </label>
       </aside>
 
       <section class="overflow-hidden">
         <div class="grid grid-cols-2 border-b border-slate-200 bg-white md:grid-cols-5">
           <div class="border-r border-slate-200 p-5">
-            <div class="text-sm font-medium text-slate-500">Total Posts</div>
+            <div class="text-sm font-medium text-slate-500">סה״כ פוסטים</div>
             <div id="kpiPosts" class="mt-1 text-3xl font-semibold">{{ total_posts }}</div>
           </div>
           <div class="border-r border-slate-200 p-5">
-            <div class="text-sm font-medium text-slate-500">Accounts</div>
+            <div class="text-sm font-medium text-slate-500">חשבונות</div>
             <div class="mt-1 text-3xl font-semibold">{{ account_count }}</div>
           </div>
           <div class="border-r border-slate-200 p-5">
-            <div class="text-sm font-medium text-slate-500">Equipping Posts</div>
+            <div class="text-sm font-medium text-slate-500">פוסטים עם פעולה</div>
             <div id="kpiEquipped" class="mt-1 text-3xl font-semibold">{{ equipped_count }}</div>
           </div>
           <div class="border-r border-slate-200 p-5">
-            <div class="text-sm font-medium text-slate-500">Avg. Actionability</div>
+            <div class="text-sm font-medium text-slate-500">ממוצע ישימות</div>
             <div id="kpiActionability" class="mt-1 text-3xl font-semibold">{{ avg_actionability }}</div>
           </div>
           <div class="p-5">
-            <div class="text-sm font-medium text-slate-500">Engagement</div>
+            <div class="text-sm font-medium text-slate-500">מעורבות</div>
             <div id="kpiEngagement" class="mt-1 text-3xl font-semibold">{{ total_engagement }}</div>
           </div>
         </div>
@@ -138,15 +138,24 @@
         </div>
         {% endif %}
 
+        <section class="border-b border-slate-200 bg-slate-50 px-5 py-4">
+          <h2 class="mb-2 text-base font-semibold">מסקנה ניהולית קצרה</h2>
+          <ul class="space-y-1 text-sm leading-6 text-slate-700">
+            {% for line in insight_lines %}
+            <li>{{ line }}</li>
+            {% endfor %}
+          </ul>
+        </section>
+
         <div class="grid grid-cols-1 border-b border-slate-200 xl:grid-cols-2">
           <section class="border-b border-slate-200 p-5 xl:border-b-0 xl:border-r">
-            <h2 class="mb-4 text-base font-semibold">Posts by Category</h2>
+            <h2 class="mb-4 text-base font-semibold">פוסטים לפי קטגוריה</h2>
             <div class="chart-shell">
               <canvas id="categoryChart"></canvas>
             </div>
           </section>
           <section class="p-5">
-            <h2 class="mb-4 text-base font-semibold">Posts Over Time</h2>
+            <h2 class="mb-4 text-base font-semibold">פוסטים לאורך זמן</h2>
             <div class="chart-shell">
               <canvas id="timelineChart"></canvas>
             </div>
@@ -154,18 +163,18 @@
         </div>
 
         <section class="border-b border-slate-200 p-5">
-          <h2 class="mb-4 text-base font-semibold">Account Performance Comparison</h2>
+          <h2 class="mb-4 text-base font-semibold">השוואה בין חשבונות</h2>
           <div class="overflow-x-auto">
             <table class="w-full min-w-[860px] border-collapse text-sm">
               <thead>
                 <tr class="border-y border-slate-200 bg-slate-50 text-left text-xs uppercase text-slate-500">
-                  <th class="px-3 py-2">Account</th>
-                  <th class="px-3 py-2 text-right">Posts</th>
-                  <th class="px-3 py-2 text-right">Engagement</th>
-                  <th class="px-3 py-2 text-right">Equipped</th>
-                  <th class="px-3 py-2 text-right">Avg. Actionability</th>
-                  <th class="px-3 py-2">Top Category</th>
-                  <th class="px-3 py-2">Top Tone</th>
+                  <th class="px-3 py-2">חשבון</th>
+                  <th class="px-3 py-2 text-right">פוסטים</th>
+                  <th class="px-3 py-2 text-right">מעורבות</th>
+                  <th class="px-3 py-2 text-right">עם פעולה</th>
+                  <th class="px-3 py-2 text-right">ישימות ממוצעת</th>
+                  <th class="px-3 py-2">קטגוריה מובילה</th>
+                  <th class="px-3 py-2">טון מוביל</th>
                 </tr>
               </thead>
               <tbody id="accountTable">
@@ -188,7 +197,7 @@
         <section class="p-5">
           <div class="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
-              <h2 class="text-base font-semibold">Media Evidence</h2>
+              <h2 class="text-base font-semibold">עדויות חזותיות ופוסטים</h2>
               <p id="resultCount" class="mt-1 text-sm text-slate-500"></p>
             </div>
           </div>
@@ -231,7 +240,7 @@
         type: "bar",
         data: {
           labels: Object.keys(categories),
-          datasets: [{ label: "Posts", data: Object.values(categories), backgroundColor: "#078d99" }],
+          datasets: [{ label: "פוסטים", data: Object.values(categories), backgroundColor: "#078d99" }],
         },
         options: {
           responsive: true,
@@ -248,14 +257,14 @@
           labels: timeline.map((item) => item.date),
           datasets: [
             {
-              label: "Posts",
+              label: "פוסטים",
               data: timeline.map((item) => item.posts),
               borderColor: "#078d99",
               backgroundColor: "rgba(7, 141, 153, 0.12)",
               tension: 0.3,
             },
             {
-              label: "Engagement",
+              label: "מעורבות",
               data: timeline.map((item) => item.engagement),
               borderColor: "#e49a00",
               backgroundColor: "rgba(228, 154, 0, 0.12)",
@@ -293,7 +302,7 @@
         const visible = filteredPosts();
         const grid = document.getElementById("postGrid");
         grid.innerHTML = "";
-        document.getElementById("resultCount").textContent = `${visible.length} matching posts`;
+        document.getElementById("resultCount").textContent = `${visible.length} פוסטים תואמים`;
         document.getElementById("kpiPosts").textContent = visible.length;
         document.getElementById("kpiEquipped").textContent = visible.filter((post) => post.equipsFollowers).length;
         document.getElementById("kpiEngagement").textContent = visible
@@ -305,7 +314,7 @@
           : "0";
 
         visible.forEach((post, index) => {
-          const image = post.screenshot || post.media || "";
+          const image = post.media || post.screenshot || "";
           const article = document.createElement("article");
           article.className = "overflow-hidden rounded-md border border-slate-200 bg-white";
           article.innerHTML = `
@@ -314,31 +323,31 @@
                 <div class="text-sm font-semibold text-[#08214a]">${escapeHtml(post.account)}</div>
                 <div class="text-xs text-slate-500">${escapeHtml(post.date)} · ${escapeHtml(post.category)}</div>
               </div>
-              <a class="text-xs font-medium text-[#0b5cad]" href="${post.postUrl}" target="_blank" rel="noreferrer">Open</a>
+              <a class="text-xs font-medium text-[#0b5cad]" href="${post.postUrl}" target="_blank" rel="noreferrer">פתיחה</a>
             </div>
             ${
               image
-                ? `<img class="h-64 w-full object-cover" src="${image}" alt="Screenshot from ${escapeHtml(post.account)} post" />`
-                : `<div class="flex h-64 items-center justify-center bg-slate-50 text-sm text-slate-500">No media captured</div>`
+                ? `<img class="h-64 w-full object-cover" src="${image}" alt="צילום מסך מפוסט של ${escapeHtml(post.account)}" />`
+                : `<div class="flex h-64 items-center justify-center bg-slate-50 text-sm text-slate-500">לא נלכדה מדיה</div>`
             }
             <div class="space-y-3 p-3">
               <div class="flex flex-wrap gap-2 text-xs">
                 <span class="rounded bg-[#078d99]/10 px-2 py-1 font-medium text-[#087985]">${escapeHtml(post.tone)}</span>
-                <span class="rounded bg-slate-100 px-2 py-1 text-slate-700">Actionability ${post.actionability}/5</span>
+                <span class="rounded bg-slate-100 px-2 py-1 text-slate-700">ישימות ${post.actionability}/5</span>
                 ${
                   post.equipsFollowers
-                    ? `<span class="rounded bg-emerald-50 px-2 py-1 text-emerald-700">Equips followers</span>`
-                    : `<span class="rounded bg-slate-100 px-2 py-1 text-slate-600">Low direct action</span>`
+                    ? `<span class="rounded bg-emerald-50 px-2 py-1 text-emerald-700">מצייד לפעולה</span>`
+                    : `<span class="rounded bg-slate-100 px-2 py-1 text-slate-600">פעולה ישירה נמוכה</span>`
                 }
               </div>
-              <p class="line-clamp-4 text-sm leading-6 text-slate-700">${escapeHtml(post.caption || "No caption captured.")}</p>
+              <p class="line-clamp-4 text-sm leading-6 text-slate-700">${escapeHtml(post.caption || "לא נלכד כיתוב.")}</p>
               <div class="border-t border-slate-100 pt-3">
-                <div class="text-xs font-bold uppercase text-slate-500">Strategy</div>
-                <p class="mt-1 text-sm text-[#08214a]">${escapeHtml(post.strategy || "No strategy identified.")}</p>
+                <div class="text-xs font-bold uppercase text-slate-500">אסטרטגיה</div>
+                <p class="mt-1 text-sm text-[#08214a]">${escapeHtml(post.strategy || "לא זוהתה אסטרטגיה.")}</p>
               </div>
               <div class="grid grid-cols-2 gap-2 text-xs text-slate-500">
-                <div>Likes: ${post.likes ?? "n/a"}</div>
-                <div>Comments: ${post.comments ?? "n/a"}</div>
+                <div>לייקים: ${post.likes ?? "לא זמין"}</div>
+                <div>תגובות: ${post.comments ?? "לא זמין"}</div>
               </div>
             </div>
           `;
@@ -395,7 +404,7 @@
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = "adl-instagram-analysis.json";
+        link.download = "adl-instagram-analysis-he.json";
         link.click();
         URL.revokeObjectURL(url);
       });

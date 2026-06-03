@@ -117,8 +117,9 @@ class InstagramScraper:
             return None
 
         description = await extract_meta_content(page, "meta[property='og:description']")
+        title = await extract_meta_content(page, "meta[property='og:title']")
         media_url = await extract_meta_content(page, "meta[property='og:image']")
-        caption = extract_caption(description) or await extract_article_text(page)
+        caption = extract_caption(description) or extract_caption(title) or await extract_article_text(page)
         likes, comments = extract_counts(description)
 
         screenshot_path = await self._save_screenshot(page, account, post_id)
@@ -220,7 +221,7 @@ def extract_caption(description: str) -> str:
     if not description:
         return ""
 
-    quoted = re.search(r":\s*[\"“](?P<caption>.*)[\"”]\s*$", description, flags=re.DOTALL)
+    quoted = re.search(r":\s*[\"“](?P<caption>.*)[\"”]\.?\s*$", description, flags=re.DOTALL)
     if quoted:
         return clean_text(quoted.group("caption"))
 

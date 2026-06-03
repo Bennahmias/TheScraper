@@ -27,7 +27,9 @@ Categories must be one of:
 Reporting, Education, Advocacy, Community Action, Toolkit or Resource,
 Incident Response, Commemoration, Awareness, Other.
 Be conservative: if there is no explicit or implied follower action, mark
-equips_followers=false and use a lower actionability_score."""
+equips_followers=false and use a lower actionability_score.
+Use Hebrew for these free-text fields: strategy, target_audience, follower_action,
+and evidence. Keep enum values in English exactly as required by the schema."""
 
 
 def analyze_dataset(
@@ -104,10 +106,10 @@ def analyze_with_rules(post: InstagramPost) -> PostAnalysis:
     if any(word in caption for word in ["report", "hotline", "tip line", "file a complaint"]):
         return PostAnalysis(
             category="Reporting",
-            strategy="Direct followers to report antisemitic incidents or content.",
+            strategy="הפניה ברורה לדיווח על אירועים או תכנים אנטישמיים.",
             tone=tone_for(caption),
-            target_audience="Followers who witness antisemitism",
-            follower_action="Report the incident or content through the named channel.",
+            target_audience="עוקבים שנתקלים באנטישמיות",
+            follower_action="לדווח על האירוע או התוכן בערוץ שצוין בפוסט.",
             equips_followers=True,
             urgency=4,
             actionability_score=5,
@@ -117,10 +119,10 @@ def analyze_with_rules(post: InstagramPost) -> PostAnalysis:
     if any(word in caption for word in ["toolkit", "guide", "resource", "resources", "download"]):
         return PostAnalysis(
             category="Toolkit or Resource",
-            strategy="Provide reusable resources or guidance materials.",
+            strategy="אספקת משאבים, מדריכים או חומרי עזר שניתן להשתמש בהם ולשתף.",
             tone=tone_for(caption),
-            target_audience="Community members seeking practical guidance",
-            follower_action="Use or share the provided resource.",
+            target_audience="חברי קהילה שמחפשים הדרכה מעשית",
+            follower_action="להשתמש במשאב או לשתף אותו עם אחרים.",
             equips_followers=True,
             urgency=3,
             actionability_score=4,
@@ -130,10 +132,10 @@ def analyze_with_rules(post: InstagramPost) -> PostAnalysis:
     if any(word in caption for word in ["call your", "contact your", "advocate", "legislation"]):
         return PostAnalysis(
             category="Advocacy",
-            strategy="Encourage civic or institutional advocacy.",
+            strategy="עידוד פעולה אזרחית או מוסדית מול מקבלי החלטות.",
             tone=tone_for(caption),
-            target_audience="Followers willing to take civic action",
-            follower_action="Contact representatives or advocate for a stated policy.",
+            target_audience="עוקבים שמוכנים לפעול בזירה הציבורית",
+            follower_action="לפנות לנציגים, לתמוך במדיניות או להצטרף למהלך הסברה.",
             equips_followers=True,
             urgency=4,
             actionability_score=4,
@@ -143,10 +145,10 @@ def analyze_with_rules(post: InstagramPost) -> PostAnalysis:
     if any(word in caption for word in ["webinar", "learn", "education", "training", "workshop"]):
         return PostAnalysis(
             category="Education",
-            strategy="Invite followers to learn, train, or build awareness.",
+            strategy="הזמנה ללמידה, הכשרה או הרחבת מודעות בנושא אנטישמיות.",
             tone=tone_for(caption),
-            target_audience="Followers seeking education",
-            follower_action="Attend or consume the educational material.",
+            target_audience="עוקבים שמבקשים ידע וכלים",
+            follower_action="להשתתף בהדרכה או לצרוך את חומרי הלמידה.",
             equips_followers=True,
             urgency=2,
             actionability_score=3,
@@ -156,10 +158,10 @@ def analyze_with_rules(post: InstagramPost) -> PostAnalysis:
     if any(word in caption for word in ["join us", "rally", "event", "community", "stand together"]):
         return PostAnalysis(
             category="Community Action",
-            strategy="Mobilize followers toward collective public or community action.",
+            strategy="גיוס עוקבים לפעולה קהילתית או ציבורית משותפת.",
             tone=tone_for(caption),
-            target_audience="Local community members",
-            follower_action="Join, attend, share, or participate.",
+            target_audience="חברי הקהילה המקומית",
+            follower_action="להצטרף, להשתתף, להגיע לאירוע או לשתף.",
             equips_followers=True,
             urgency=3,
             actionability_score=4,
@@ -169,10 +171,10 @@ def analyze_with_rules(post: InstagramPost) -> PostAnalysis:
     if any(word in caption for word in ["incident", "attack", "threat", "vandalism", "harassment"]):
         return PostAnalysis(
             category="Incident Response",
-            strategy="Frame a response to a specific antisemitic incident.",
+            strategy="תגובה לאירוע אנטישמי ספציפי והצבתו בהקשר קהילתי או ציבורי.",
             tone=tone_for(caption),
-            target_audience="Concerned followers and affected communities",
-            follower_action="Stay informed, support affected communities, or report related incidents.",
+            target_audience="עוקבים מודאגים וקהילות שנפגעו",
+            follower_action="להישאר מעודכנים, לתמוך בקהילה שנפגעה או לדווח על אירועים דומים.",
             equips_followers=False,
             urgency=4,
             actionability_score=2,
@@ -182,10 +184,10 @@ def analyze_with_rules(post: InstagramPost) -> PostAnalysis:
     if any(word in caption for word in ["remember", "memorial", "honor", "commemorate", "yom hashoah"]):
         return PostAnalysis(
             category="Commemoration",
-            strategy="Use remembrance to reinforce vigilance and solidarity.",
+            strategy="שימוש בזיכרון ובהנצחה כדי לחזק ערנות, סולידריות ומחויבות ציבורית.",
             tone="Commemorative",
-            target_audience="General followers",
-            follower_action="Remember, share, or participate in commemoration.",
+            target_audience="כלל העוקבים",
+            follower_action="לזכור, לשתף או להשתתף בפעילות הנצחה.",
             equips_followers=False,
             urgency=2,
             actionability_score=2,
@@ -195,10 +197,10 @@ def analyze_with_rules(post: InstagramPost) -> PostAnalysis:
     if any(word in caption for word in ["antisemitism", "hate", "bias", "extremism"]):
         return PostAnalysis(
             category="Awareness",
-            strategy="Raise awareness of antisemitism, hate, or extremism.",
+            strategy="העלאת מודעות לאנטישמיות, שנאה, הטיה או קיצוניות.",
             tone=tone_for(caption),
-            target_audience="General followers",
-            follower_action="Recognize and discuss the issue.",
+            target_audience="כלל העוקבים",
+            follower_action="להכיר את הסוגיה, לדבר עליה ולשתף מידע.",
             equips_followers=False,
             urgency=3,
             actionability_score=2,
@@ -207,9 +209,9 @@ def analyze_with_rules(post: InstagramPost) -> PostAnalysis:
 
     return PostAnalysis(
         category="Other",
-        strategy="No clear counter-antisemitism action strategy detected.",
+        strategy="לא זוהתה אסטרטגיית פעולה ברורה להתמודדות עם אנטישמיות.",
         tone=tone_for(caption),
-        target_audience="General followers",
+        target_audience="כלל העוקבים",
         follower_action="",
         equips_followers=False,
         urgency=1,

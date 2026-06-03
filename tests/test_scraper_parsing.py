@@ -16,6 +16,6 @@ def test_extract_counts_supports_suffixes() -> None:
 
 
 def test_extract_caption_from_og_description() -> None:
-    text = '125 likes, 4 comments - adl on Instagram: "Report antisemitism when you see it."'
+    text = '125 likes, 4 comments - adl on Instagram: "Report antisemitism when you see it.". '
 
     assert extract_caption(text) == "Report antisemitism when you see it."
