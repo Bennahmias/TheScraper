@@ -26,20 +26,20 @@
 - שימוש במשאבים וכלים מעשיים: 1 פוסטים
 
 ## לפי חשבון
-- adl.heartland: הגעה לאירועים ופעולה קהילתית (1 מתוך 1 פוסטים עם הכוונה לפעולה)
-- adl_midwest: מסרים כלליים או ארגוניים (3 מתוך 5 פוסטים עם הכוונה לפעולה)
-- adl_newengland: הגעה לאירועים ופעולה קהילתית (5 מתוך 5 פוסטים עם הכוונה לפעולה)
-- adl_nynj: הגעה לאירועים ופעולה קהילתית (6 מתוך 8 פוסטים עם הכוונה לפעולה)
-- adl_philly: העלאת מודעות (2 מתוך 5 פוסטים עם הכוונה לפעולה)
-- adl_texoma: הגעה לאירועים ופעולה קהילתית (3 מתוך 3 פוסטים עם הכוונה לפעולה)
-- adl_washdc: תגובה ציבורית לאירועים אנטישמיים (7 מתוך 14 פוסטים עם הכוונה לפעולה)
-- adlaustin: הגעה לאירועים ופעולה קהילתית (5 מתוך 5 פוסטים עם הכוונה לפעולה)
-- adlcalifornia: תגובה ציבורית לאירועים אנטישמיים (3 מתוך 12 פוסטים עם הכוונה לפעולה)
-- adldesert: הגעה לאירועים ופעולה קהילתית (7 מתוך 10 פוסטים עם הכוונה לפעולה)
-- adlmichigan: מסרים כלליים או ארגוניים (3 מתוך 10 פוסטים עם הכוונה לפעולה)
-- adlpnw: תגובה ציבורית לאירועים אנטישמיים (0 מתוך 2 פוסטים עם הכוונה לפעולה)
-- adlsouthcentral: הגעה לאירועים ופעולה קהילתית (1 מתוך 1 פוסטים עם הכוונה לפעולה)
-- adlsoutheast: דיווח על אירועים ותוכן אנטישמי (1 מתוך 1 פוסטים עם הכוונה לפעולה)
+- adl.heartland (הארטלנד): הגעה לאירועים ופעולה קהילתית (1 מתוך 1 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DYAxmaWCdfo/
+- adl_midwest (המערב התיכון): מסרים כלליים או ארגוניים (3 מתוך 5 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DYAKaxTka5z/ https://www.instagram.com/p/DXzv6-xkbXq/ https://www.instagram.com/p/DXzX72fEc7n/
+- adl_newengland (ניו אינגלנד): הגעה לאירועים ופעולה קהילתית (5 מתוך 5 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DY5dWu1D-ch/ https://www.instagram.com/p/DY2xasGj_jf/ https://www.instagram.com/p/DYNbgakFoe3/
+- adl_nynj (ניו יורק וניו ג׳רזי): הגעה לאירועים ופעולה קהילתית (6 מתוך 8 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DZBG3FalH75/ https://www.instagram.com/p/DY78qnjH7sj/ https://www.instagram.com/p/DY7oLGawh_K/
+- adl_philly (פילדלפיה): העלאת מודעות (2 מתוך 5 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DYFR37xMmBF/ https://www.instagram.com/p/DYCoAs2gFMn/
+- adl_texoma (טקסומה): הגעה לאירועים ופעולה קהילתית (3 מתוך 3 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DYCqyDlD-ys/ https://www.instagram.com/p/DYAgV5qFUXI/ https://www.instagram.com/p/DXzN1IilYjg/
+- adl_washdc (וושינגטון די.סי.): תגובה ציבורית לאירועים אנטישמיים (7 מתוך 14 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DZIm0eBGKwu/ https://www.instagram.com/p/DY5CjI1HOFq/ https://www.instagram.com/p/DYz3un1nPRj/
+- adlaustin (אוסטין): הגעה לאירועים ופעולה קהילתית (5 מתוך 5 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DYPnjfSgEKV/ https://www.instagram.com/p/DYPZwDPFTdD/ https://www.instagram.com/p/DYNDCzAFYSb/
+- adlcalifornia (קליפורניה): תגובה ציבורית לאירועים אנטישמיים (3 מתוך 12 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DYF-UFuEqVp/ https://www.instagram.com/p/DYF9ElTEiZ-/ https://www.instagram.com/p/DYC54CWD0me/
+- adldesert (אזור המדבר): הגעה לאירועים ופעולה קהילתית (7 מתוך 10 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DY5d1CVEgeW/ https://www.instagram.com/p/DYSfLUeGE7a/ https://www.instagram.com/p/DYQfej_GLMv/
+- adlmichigan (מישיגן): מסרים כלליים או ארגוניים (3 מתוך 10 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DY18fEHEXZU/ https://www.instagram.com/p/DYzveNdSUDK/ https://www.instagram.com/p/DX_7ui1HApZ/
+- adlpnw (הצפון-מערב הפסיפי): תגובה ציבורית לאירועים אנטישמיים (0 מתוך 2 פוסטים עם הכוונה לפעולה)
+- adlsouthcentral (דרום-מרכז ארה״ב): הגעה לאירועים ופעולה קהילתית (1 מתוך 1 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DYAyEn5AKx5/
+- adlsoutheast (דרום-מזרח ארה״ב): דיווח על אירועים ותוכן אנטישמי (1 מתוך 1 פוסטים עם הכוונה לפעולה) | קישורים רלוונטיים: https://www.instagram.com/p/DYAnvj_mPfQ/
 
 ## דוגמאות מייצגות
 - adlmichigan | חינוך, הסברה וזיהוי אנטישמיות
@@ -72,6 +72,3 @@
   תרגום/משמעות: הפוסט מתאר התנגדות משותפת להצעת חוק באילינוי, ומדגיש שכאשר הקהילה מופיעה יחד הקול הציבורי שלה חזק יותר.
   למה זה חשוב: כאן הפעולה היא סנגור ציבורי ועבודה עם שותפים מול מדיניות.
   קישור: https://www.instagram.com/p/DXzv6-xkbXq/
-
-## הערה למנהל
-המסר המרכזי: ADL האזוריים בונים יכולת תגובה קהילתית יותר מאשר קריאה לעימות. הם מלמדים מה לזהות, לאן לדווח, מתי להגיע פיזית, ואיך לחזק תגובה ציבורית מאורגנת.

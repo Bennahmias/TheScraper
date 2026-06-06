@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import mimetypes
+import re
 from collections import Counter, defaultdict
 from html import escape
 from pathlib import Path
@@ -28,6 +29,23 @@ METHOD_LABELS = {
     "Commemoration": "הנצחה וזיכרון כבסיס למחויבות",
     "Awareness": "העלאת מודעות",
     "Other": "מסרים כלליים או ארגוניים",
+}
+
+ACCOUNT_LOCATION_LABELS_HE = {
+    "adlmichigan": "מישיגן",
+    "adlaustin": "אוסטין",
+    "adlcalifornia": "קליפורניה",
+    "adl.heartland": "הארטלנד",
+    "adl_newengland": "ניו אינגלנד",
+    "adlsoutheast": "דרום-מזרח ארה״ב",
+    "adldesert": "אזור המדבר",
+    "adl_philly": "פילדלפיה",
+    "adl_texoma": "טקסומה",
+    "adlsouthcentral": "דרום-מרכז ארה״ב",
+    "adl_nynj": "ניו יורק וניו ג׳רזי",
+    "adl_washdc": "וושינגטון די.סי.",
+    "adl_midwest": "המערב התיכון",
+    "adlpnw": "הצפון-מערב הפסיפי",
 }
 
 PREFERRED_EXAMPLES = {
@@ -75,6 +93,15 @@ PREFERRED_EXAMPLES = {
     },
 }
 
+EXAMPLE_IMAGE_FALLBACKS = {
+    "adlmichigan:DX_7ui1HApZ": Path("docs/assets/brief_examples/adlmichigan_DX_7ui1HApZ.jpg"),
+    "adlmichigan:DY18fEHEXZU": Path("docs/assets/brief_examples/adlmichigan_DY18fEHEXZU.jpg"),
+    "adlmichigan:DYlPSbcpi96": Path("docs/assets/brief_examples/adlmichigan_DYlPSbcpi96.jpg"),
+    "adlcalifornia:DYF-UFuEqVp": Path("docs/assets/brief_examples/adlcalifornia_DYF-UFuEqVp.jpg"),
+    "adl_newengland:DYNbgakFoe3": Path("docs/assets/brief_examples/adl_newengland_DYNbgakFoe3.jpg"),
+    "adl_midwest:DXzv6-xkbXq": Path("docs/assets/brief_examples/adl_midwest_DXzv6-xkbXq.jpg"),
+}
+
 
 def generate_manager_brief(
     dataset: ScrapeDataset,
@@ -118,12 +145,28 @@ def build_brief_context(
         equipped_count = sum(
             1 for post in account_posts if post.analysis and post.analysis.equips_followers
         )
+        relevant_posts = [
+            post
+            for post in sorted(
+                account_posts,
+                key=lambda item: item.timestamp or item.scraped_at,
+                reverse=True,
+            )
+            if post.post_url
+            and post.analysis
+            and (
+                post.analysis.category in ACTION_CATEGORIES
+                or post.analysis.equips_followers
+            )
+        ][:3]
         account_rows.append(
             {
                 "account": account,
+                "location": ACCOUNT_LOCATION_LABELS_HE.get(account, ""),
                 "posts": len(account_posts),
                 "top_method": METHOD_LABELS.get(top_category, category_label(top_category)),
                 "equipped": equipped_count,
+                "links": [post.post_url for post in relevant_posts],
             }
         )
 
@@ -160,7 +203,7 @@ def pick_examples(
                 "original": excerpt(post.caption),
                 "translation": translation.get("translation", ""),
                 "takeaway": translation.get("takeaway", post.analysis.strategy),
-                "image": image_src(post.media_path, html_path, embed_assets),
+                "image": example_image_src(post, html_path, embed_assets),
                 "url": post.post_url,
             }
         )
@@ -182,7 +225,7 @@ def pick_examples(
                 "original": excerpt(post.caption),
                 "translation": post.analysis.strategy,
                 "takeaway": post.analysis.follower_action or post.analysis.strategy,
-                "image": image_src(post.media_path, html_path, embed_assets),
+                "image": example_image_src(post, html_path, embed_assets),
                 "url": post.post_url,
             }
         )
@@ -213,6 +256,16 @@ def image_src(asset_path: str | None, html_path: Path, embed_assets: bool) -> st
     return f"data:{mime};base64,{encoded}"
 
 
+def example_image_src(post: InstagramPost, html_path: Path, embed_assets: bool) -> str:
+    primary = image_src(post.media_path, html_path, embed_assets)
+    if primary:
+        return primary
+    fallback = EXAMPLE_IMAGE_FALLBACKS.get(post.id)
+    if not fallback:
+        return ""
+    return image_src(str(fallback), html_path, embed_assets)
+
+
 def render_markdown(context: dict[str, object]) -> str:
     categories: Counter[str] = context["categories"]  # type: ignore[assignment]
     account_rows: list[dict[str, object]] = context["account_rows"]  # type: ignore[assignment]
@@ -223,7 +276,11 @@ def render_markdown(context: dict[str, object]) -> str:
         for category, count in categories.most_common()
     ]
     account_lines = [
-        f"- {row['account']}: {row['top_method']} ({row['equipped']} מתוך {row['posts']} פוסטים עם הכוונה לפעולה)"
+        (
+            f"- {row['account']}{format_location(row['location'])}: "
+            f"{row['top_method']} ({row['equipped']} מתוך {row['posts']} פוסטים עם הכוונה לפעולה)"
+            f"{format_post_links(row['links'])}"
+        )
         for row in account_rows
     ]
     example_lines = [
@@ -270,12 +327,6 @@ def render_markdown(context: dict[str, object]) -> str:
             "",
             "## דוגמאות מייצגות",
             *example_lines,
-            "",
-            "## הערה למנהל",
-            (
-                "המסר המרכזי: ADL האזוריים בונים יכולת תגובה קהילתית יותר מאשר קריאה לעימות. "
-                "הם מלמדים מה לזהות, לאן לדווח, מתי להגיע פיזית, ואיך לחזק תגובה ציבורית מאורגנת."
-            ),
         ]
     )
 
@@ -501,12 +552,13 @@ def markdown_to_html(markdown: str) -> str:
 
 def remove_text_examples(markdown: str) -> str:
     marker = "\n## דוגמאות מייצגות\n"
-    next_marker = "\n## הערה למנהל\n"
-    if marker not in markdown or next_marker not in markdown:
+    if marker not in markdown:
         return markdown
     before, rest = markdown.split(marker, 1)
-    _, after = rest.split(next_marker, 1)
-    return before + next_marker + after
+    next_heading = re.search(r"\n## [^\n]+\n", rest)
+    if not next_heading:
+        return before.rstrip()
+    return before + rest[next_heading.start() :]
 
 
 def split_before_breakdown(markdown: str) -> tuple[str, str]:
@@ -518,14 +570,20 @@ def split_before_breakdown(markdown: str) -> tuple[str, str]:
 
 
 def link_urls(text: str) -> str:
-    parts = text.split("https://")
-    if len(parts) == 1:
-        return text
-    result = parts[0]
-    for part in parts[1:]:
-        url, *rest = part.split(")", 1)
-        full_url = "https://" + url
-        result += f'<a href="{full_url}" target="_blank" rel="noreferrer">קישור לפוסט</a>'
-        if rest:
-            result += ")" + rest[0]
-    return result
+    return re.sub(
+        r"https://[^\s)]+",
+        lambda match: (
+            f'<a href="{match.group(0)}" target="_blank" rel="noreferrer">פוסט</a>'
+        ),
+        text,
+    )
+
+
+def format_location(location: object) -> str:
+    return f" ({location})" if location else ""
+
+
+def format_post_links(links: object) -> str:
+    if not isinstance(links, list) or not links:
+        return ""
+    return " | קישורים רלוונטיים: " + " ".join(str(link) for link in links)

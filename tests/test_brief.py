@@ -10,9 +10,9 @@ def test_generate_manager_brief(tmp_path: Path) -> None:
         since=datetime(2026, 5, 1, tzinfo=UTC),
         posts=[
             InstagramPost(
-                id="adl:test",
-                account="adl",
-                account_url="https://www.instagram.com/adl/",
+                id="adlcalifornia:DYF-UFuEqVp",
+                account="adlcalifornia",
+                account_url="https://www.instagram.com/adlcalifornia/",
                 post_url="https://www.instagram.com/p/test/",
                 caption="Report antisemitism.",
                 analysis=PostAnalysis(
@@ -29,4 +29,13 @@ def test_generate_manager_brief(tmp_path: Path) -> None:
     generate_manager_brief(dataset, html, md)
 
     assert "השורה התחתונה" in md.read_text(encoding="utf-8")
-    assert "תקציר מנהלים" in html.read_text(encoding="utf-8")
+    markdown = md.read_text(encoding="utf-8")
+    html_text = html.read_text(encoding="utf-8")
+    assert "adlcalifornia (קליפורניה)" in markdown
+    assert "קישורים רלוונטיים" in markdown
+    assert "הערה למנהל" not in markdown
+    assert "תקציר מנהלים" in html_text
+    assert "adlcalifornia (קליפורניה)" in html_text
+    assert "הערה למנהל" not in html_text
+    assert '<a href="https://www.instagram.com/p/test/" target="_blank" rel="noreferrer">פוסט</a>' in html_text
+    assert '<img src=' in html_text
