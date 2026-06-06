@@ -335,6 +335,7 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
     markdown_without_text_examples = remove_text_examples(markdown)
     before_breakdown, breakdown = split_before_breakdown(markdown_without_text_examples)
     body_before = markdown_to_html(before_breakdown)
+    title_html, body_before = split_after_first_h1(body_before)
     body_after = markdown_to_html(breakdown)
     cards = render_example_cards(context["examples"])  # type: ignore[arg-type]
     return f"""<!doctype html>
@@ -345,47 +346,132 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
     <title>תקציר מנהלים - ADL Instagram</title>
     <style>
       * {{ box-sizing: border-box; }}
+      :root {{
+        --ink: #10213d;
+        --muted: #5d6b7e;
+        --line: #d9e1ec;
+        --line-strong: #b8c7d9;
+        --surface: #ffffff;
+        --surface-soft: #f7f9fc;
+        --accent: #0b5cad;
+        --accent-dark: #083f7a;
+        --teal: #057885;
+      }}
       body {{
         margin: 0;
-        background: #eef3f8;
-        color: #0f1f3d;
-        font-family: Arial, "Noto Sans Hebrew", sans-serif;
-        line-height: 1.65;
+        background: #edf2f7;
+        color: var(--ink);
+        font-family: Arial, "Noto Sans Hebrew", "Segoe UI", sans-serif;
+        line-height: 1.62;
       }}
       main {{
-        max-width: 1040px;
+        max-width: 1080px;
         margin: 28px auto;
-        padding: 34px 38px 48px;
-        background: #fff;
-        border: 1px solid #dbe3ef;
-        border-radius: 12px;
-        box-shadow: 0 18px 45px rgba(15, 31, 61, 0.08);
+        padding: 42px 48px 52px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 18px 50px rgba(16, 33, 61, 0.08);
       }}
       h1 {{
-        font-size: 32px;
+        max-width: 900px;
+        font-size: 31px;
         line-height: 1.25;
-        margin: 10px 0 26px;
+        margin: 0 0 18px;
         padding-bottom: 18px;
-        border-bottom: 3px solid #0b5cad;
+        border-bottom: 3px solid var(--accent);
+        letter-spacing: 0;
       }}
-      h2 {{ font-size: 20px; margin: 30px 0 10px; border-top: 1px solid #dbe3ef; padding-top: 18px; }}
+      h2 {{
+        font-size: 20px;
+        line-height: 1.35;
+        margin: 0 0 12px;
+        letter-spacing: 0;
+      }}
       p, li {{ font-size: 16px; }}
-      ul, ol {{ padding-inline-start: 26px; }}
-      a {{ color: #0b5cad; }}
+      p {{ margin: 0 0 10px; }}
+      ul, ol {{ padding-inline-start: 24px; margin: 8px 0 0; }}
+      a {{ color: var(--accent); text-underline-offset: 3px; }}
       .stats {{
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        margin: 0 0 24px;
+        gap: 14px;
+        margin: 0 0 30px;
       }}
       .stat {{
-        border: 1px solid #dbe3ef;
+        border: 1px solid var(--line);
         border-radius: 8px;
-        padding: 18px;
-        background: linear-gradient(180deg, #ffffff, #f8fbff);
+        padding: 18px 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafd);
       }}
-      .stat b {{ display: block; font-size: 28px; color: #0b5cad; }}
-      ol li::marker {{ color: #0b5cad; font-weight: 700; }}
+      .stat b {{
+        display: block;
+        font-size: 31px;
+        line-height: 1;
+        color: var(--accent);
+        margin-bottom: 8px;
+      }}
+      .stat span {{ color: var(--muted); font-size: 14px; font-weight: 700; }}
+      .brief-section {{
+        border-top: 1px solid var(--line);
+        padding-top: 22px;
+        margin-top: 26px;
+      }}
+      .section-bottom-line {{
+        padding: 22px;
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }}
+      .section-bottom-line h2 {{ color: var(--accent-dark); }}
+      .section-actions ol {{
+        display: grid;
+        gap: 8px;
+      }}
+      .section-actions li {{
+        padding-inline-start: 2px;
+      }}
+      ol li::marker {{ color: var(--accent); font-weight: 700; }}
+      .section-breakdown ul,
+      .section-accounts ul {{
+        list-style: none;
+        padding: 0;
+      }}
+      .section-breakdown ul {{
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }}
+      .section-breakdown li,
+      .section-accounts li {{
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfcfe;
+      }}
+      .section-breakdown li {{
+        padding: 11px 13px;
+        font-weight: 700;
+      }}
+      .section-accounts ul {{
+        display: grid;
+        gap: 9px;
+      }}
+      .section-accounts li {{
+        padding: 11px 13px;
+        color: #24364f;
+      }}
+      .section-accounts a {{
+        display: inline-block;
+        margin-inline-start: 5px;
+        padding: 2px 8px;
+        border: 1px solid #cfe3f3;
+        border-radius: 999px;
+        background: #eef7fb;
+        color: var(--accent-dark);
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+      }}
       .examples {{
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -393,28 +479,36 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
         margin-top: 18px;
       }}
       .card {{
-        border: 1px solid #dbe3ef;
+        border: 1px solid var(--line);
         border-radius: 8px;
         overflow: hidden;
         background: #fff;
-        box-shadow: 0 10px 24px rgba(15, 31, 61, 0.06);
+        box-shadow: 0 10px 24px rgba(16, 33, 61, 0.055);
       }}
       .card img {{
         width: 100%;
         height: 230px;
         object-fit: cover;
         background: #eef2f7;
+        border-bottom: 1px solid var(--line);
       }}
-      .card-body {{ padding: 14px; }}
-      .card h3 {{ margin: 0 0 4px; font-size: 17px; }}
-      .meta {{ color: #52647c; font-size: 13px; margin-bottom: 10px; }}
+      .card-body {{ padding: 16px; }}
+      .card-head {{
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: start;
+        margin-bottom: 10px;
+      }}
+      .card h3 {{ margin: 0 0 3px; font-size: 18px; line-height: 1.25; }}
+      .meta {{ color: var(--muted); font-size: 13px; }}
       .chip {{
         display: inline-block;
-        margin: 0 0 10px 6px;
-        padding: 4px 8px;
-        border-radius: 6px;
+        flex: 0 0 auto;
+        padding: 4px 9px;
+        border-radius: 999px;
         background: #e8f6f7;
-        color: #087985;
+        color: var(--teal);
         font-size: 13px;
         font-weight: 700;
       }}
@@ -422,26 +516,32 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
         direction: ltr;
         text-align: left;
         color: #24364f;
-        background: #f8fafc;
+        background: var(--surface-soft);
         border-radius: 6px;
-        padding: 10px;
+        padding: 11px;
         font-size: 14px;
+        margin-bottom: 12px;
       }}
-      .translation {{ font-size: 15px; }}
+      .translation {{ font-size: 15px; margin-bottom: 0; }}
       .takeaway {{
         border-top: 1px solid #edf1f7;
-        margin-top: 10px;
-        padding-top: 10px;
+        margin-top: 12px;
+        padding-top: 12px;
         font-weight: 700;
-        color: #0f1f3d;
+        color: var(--ink);
+      }}
+      .card a {{
+        display: inline-block;
+        margin-top: 2px;
+        font-weight: 700;
       }}
       .example-section {{
-        border-top: 1px solid #dbe3ef;
+        border-top: 1px solid var(--line);
         margin-top: 28px;
-        padding-top: 18px;
+        padding-top: 22px;
       }}
       .example-section > p {{
-        color: #52647c;
+        color: var(--muted);
         margin-top: 0;
       }}
       @media print {{
@@ -449,12 +549,22 @@ def render_html(markdown: str, context: dict[str, object]) -> str:
         main {{ margin: 0; border: 0; box-shadow: none; }}
       }}
       @media (max-width: 760px) {{
-        .stats, .examples {{ grid-template-columns: 1fr; }}
+        main {{
+          margin: 0;
+          padding: 24px 16px 34px;
+          border: 0;
+          border-radius: 0;
+        }}
+        h1 {{ font-size: 25px; }}
+        .stats, .examples, .section-breakdown ul {{ grid-template-columns: 1fr; }}
+        .card-head {{ display: block; }}
+        .chip {{ margin-top: 8px; }}
       }}
     </style>
   </head>
   <body>
     <main>
+      {title_html}
       <div class="stats">
         <div class="stat"><b>{context['total_posts']}</b><span>פוסטים נותחו</span></div>
         <div class="stat"><b>{context['account_count']}</b><span>חשבונות</span></div>
@@ -492,9 +602,13 @@ def render_example_cards(examples: list[dict[str, str]]) -> str:
           <article class="card">
             {image_html}
             <div class="card-body">
-              <h3>{escape(account)}</h3>
-              <div class="meta">{escape(date)} · {escape(category)}</div>
-              <span class="chip">{escape(category)}</span>
+              <div class="card-head">
+                <div>
+                  <h3>{escape(account)}</h3>
+                  <div class="meta">{escape(date)}</div>
+                </div>
+                <span class="chip">{escape(category)}</span>
+              </div>
               <p class="quote">{escape(original)}</p>
               <p class="translation"><b>תרגום/משמעות:</b> {escape(translation)}</p>
               <p class="takeaway">{escape(takeaway)}</p>
@@ -510,6 +624,7 @@ def markdown_to_html(markdown: str) -> str:
     html_lines: list[str] = []
     in_list = False
     list_type = ""
+    in_section = False
     for line in markdown.splitlines():
         if not line:
             if in_list:
@@ -523,7 +638,12 @@ def markdown_to_html(markdown: str) -> str:
             if in_list:
                 html_lines.append(f"</{list_type}>")
                 in_list = False
-            html_lines.append(f"<h2>{escape(line[3:])}</h2>")
+            if in_section:
+                html_lines.append("</section>")
+            title = line[3:]
+            html_lines.append(f'<section class="brief-section {section_class(title)}">')
+            html_lines.append(f"<h2>{escape(title)}</h2>")
+            in_section = True
         elif line.startswith("- "):
             if not in_list or list_type != "ul":
                 if in_list:
@@ -547,7 +667,28 @@ def markdown_to_html(markdown: str) -> str:
             html_lines.append(f"<p>{link_urls(escape(line))}</p>")
     if in_list:
         html_lines.append(f"</{list_type}>")
+    if in_section:
+        html_lines.append("</section>")
     return "\n".join(html_lines)
+
+
+def section_class(title: str) -> str:
+    classes = {
+        "השורה התחתונה": "section-bottom-line",
+        "תמונת מצב": "section-snapshot",
+        "איך הם גורמים לעוקבים לפעול?": "section-actions",
+        "התפלגות מסרים": "section-breakdown",
+        "לפי חשבון": "section-accounts",
+    }
+    return classes.get(title, "section-default")
+
+
+def split_after_first_h1(html: str) -> tuple[str, str]:
+    marker = "</h1>"
+    if marker not in html:
+        return "", html
+    title, rest = html.split(marker, 1)
+    return title + marker, rest.lstrip()
 
 
 def remove_text_examples(markdown: str) -> str:
